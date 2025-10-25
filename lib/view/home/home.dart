@@ -425,12 +425,12 @@ class Home extends StatelessWidget {
 
   // 🔹 Dummy Pages for Other Tabs
   Widget _routinesPage() => const Center(
-    child: Text("Routines Page", style: TextStyle(color: Colors.white)),
+    child: Text("Comming soon...", style: TextStyle(color: Colors.white)),
   );
   Widget _explorePage() => const Center(
-    child: Text("Explore Page", style: TextStyle(color: Colors.white)),
+    child: Text("Comming soon...", style: TextStyle(color: Colors.white)),
   );
   Widget _settingsPage() => const Center(
-    child: Text("Settings Page", style: TextStyle(color: Colors.white)),
+    child: Text("Comming soon...", style: TextStyle(color: Colors.white)),
   );
 }

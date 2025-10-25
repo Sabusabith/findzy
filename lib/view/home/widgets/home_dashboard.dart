@@ -135,6 +135,9 @@
 
 //new styles..................................
 
+import 'dart:ui';
+
+import 'package:findzy/view/home/controller/home_controller.dart';
 import 'package:findzy/view/home/widgets/leads_list.dart';
 import 'package:findzy/view/home/widgets/nearbyplacescreenlist.dart';
 import 'package:flutter/material.dart';
@@ -143,7 +146,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 // Example destination pages
 class ATMScreen extends StatelessWidget {
-  const ATMScreen({super.key});
+  ATMScreen({super.key});
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Nearby ATMs')),
@@ -172,6 +176,7 @@ class TheatersScreen extends StatelessWidget {
 class HomeDashboard extends StatelessWidget {
   HomeDashboard({super.key, required this.distance});
   double distance;
+  final HomeController hcontroller = Get.find<HomeController>();
 
   @override
   Widget build(BuildContext context) {
@@ -188,18 +193,42 @@ class HomeDashboard extends StatelessWidget {
           final item = items[index];
           return GestureDetector(
             onTap: () {
-              Get.to(
-                () => NearbyPlacePage(
-                  placeType: item['title'], // e.g., 'hospital', 'petrol'
-                  osmTag: item['osmValue'],
-                  osmkey: item['osmKey'],
-                  startColor: item['gradient'][0], // first gradient color
-                  endColor: item['gradient'][1],
-                  distance: distance,
+              if (hcontroller.currentAddress.value == 'Locating...') {
+                Get.snackbar(
+                  "Locating Address...",
+                  "Please wait while we fetch your location.",
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: Colors.black.withOpacity(0.4), // glassy dark
+                  overlayBlur: 6, // stronger blur for glass effect
+                  borderRadius: 16,
+                  margin: const EdgeInsets.all(16),
+                  duration: const Duration(seconds: 3),
+                  colorText: Colors.white,
+                  icon: const Icon(
+                    Icons.location_on,
+                    color: Colors.lightBlueAccent,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  forwardAnimationCurve: Curves.easeOutBack,
+                  reverseAnimationCurve: Curves.easeIn,
+                );
+              } else {
+                Get.to(
+                  () => NearbyPlacePage(
+                    placeType: item['title'], // e.g., 'hospital', 'petrol'
+                    osmTag: item['osmValue'],
+                    osmkey: item['osmKey'],
+                    startColor: item['gradient'][0], // first gradient color
+                    endColor: item['gradient'][1],
+                    distance: distance,
 
-                  // second gradient color
-                ),
-              );
+                    // second gradient color
+                  ),
+                );
+              }
             },
             child: _GradientCard(
               title: item['title'],

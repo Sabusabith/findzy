@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -26,23 +27,54 @@ class NearbyPlaceController extends GetxController {
   void onInit() {
     super.onInit();
     fetchNearbyPlaces();
-    print("Fetching: $placeType ($osmKey=$osmValue)");
   }
 
   Future<void> fetchNearbyPlaces() async {
     isLoading.value = true;
-    final radius = radiusInMeters;
-    print(radiusInMeters);
 
     try {
       Position position = await _determinePosition();
       double userLat = position.latitude;
       double userLon = position.longitude;
 
-      final url = Uri.parse(
-        'https://overpass-api.de/api/interpreter?data=[out:json];node["$osmKey"="$osmValue"](around:$radius,$userLat,$userLon);out;',
-      );
+      final box = Hive.box('placesCache');
+      // include radius in cache key
+      final cacheKey = "$placeType-${radiusInMeters.toInt()}";
 
+      final cachedData = box.get(cacheKey);
+      if (cachedData != null) {
+        final Map<String, dynamic> cachedMap = Map<String, dynamic>.from(
+          cachedData,
+        );
+        final lastLat = cachedMap['lat'] as double;
+        final lastLon = cachedMap['lon'] as double;
+        final distanceMoved = Geolocator.distanceBetween(
+          userLat,
+          userLon,
+          lastLat,
+          lastLon,
+        );
+        final cachedTime = DateTime.parse(cachedMap['timestamp']);
+        final age = DateTime.now().difference(cachedTime).inHours;
+
+        if (distanceMoved < 1000 && age < 24) {
+          places.value = List<Map<String, dynamic>>.from(
+            cachedMap['data'].map((e) => Map<String, dynamic>.from(e)),
+          );
+          print(
+            "✅ Loaded $placeType from cache (radius: ${radiusInMeters / 1000} km)",
+          );
+          isLoading.value = false;
+          return;
+        } else {
+          await box.delete(cacheKey);
+          print("🗑️ Old cache cleared for radius ${radiusInMeters / 1000} km");
+        }
+      }
+
+      final url = Uri.parse(
+        'https://overpass-api.de/api/interpreter?data=[out:json];node["$osmKey"="$osmValue"](around:$radiusInMeters,$userLat,$userLon);out;',
+      );
       final response = await http.get(url).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
@@ -53,11 +85,11 @@ class NearbyPlaceController extends GetxController {
           _showInfoSnackbar(
             title: "No $placeType Found",
             message:
-                "There are no $placeType within ${radiusInMeters / 1000} km of your location.",
+                "There are no $placeType within ${radiusInMeters / 1000} km.",
           );
         }
 
-        places.value = await Future.wait(
+        final fetchedPlaces = await Future.wait(
           elements.map((e) async {
             final lat = e['lat'] as double;
             final lon = e['lon'] as double;
@@ -86,7 +118,7 @@ class NearbyPlaceController extends GetxController {
                   '';
             }
 
-            if (address.isEmpty) {
+            if (address.trim().isEmpty) {
               address = await _getAddressFromLatLon(lat, lon);
             }
 
@@ -110,28 +142,27 @@ class NearbyPlaceController extends GetxController {
           }).toList(),
         );
 
-        places.value.sort(
+        fetchedPlaces.sort(
           (a, b) => double.parse(
             a['distance'],
           ).compareTo(double.parse(b['distance'])),
         );
+        places.value = fetchedPlaces;
+
+        await box.put(cacheKey, {
+          'lat': userLat,
+          'lon': userLon,
+          'timestamp': DateTime.now().toIso8601String(),
+          'data': fetchedPlaces,
+        });
+
+        print("💾 Cached $placeType successfully");
       } else {
-        _showErrorSnackbar(
-          title: "Server Error",
-          message:
-              "Couldn’t fetch data from the server. Please try again later.",
-        );
-        print("❌ Server Error: ${response.statusCode} → ${response.body}");
+        _showErrorSnackbar(title: "Server Error", message: "Try again later.");
       }
-    } on http.ClientException catch (e) {
-      _showErrorSnackbar(title: "Network Error", message: e.toString());
     } on TimeoutException {
-      _showErrorSnackbar(
-        title: "Timeout",
-        message: "Server took too long to respond. Try again later.",
-      );
+      _showErrorSnackbar(title: "Timeout", message: "Server took too long.");
     } catch (e) {
-      print("❌ Exception during $placeType fetch: $e");
       _showErrorSnackbar(title: "Error", message: e.toString());
     } finally {
       isLoading.value = false;
@@ -154,7 +185,6 @@ class NearbyPlaceController extends GetxController {
         'su': 7,
       };
       final parts = oh.split(';');
-
       for (var part in parts) {
         final dayMatch = RegExp(
           r'(mo|tu|we|th|fr|sa|su)(?:-(mo|tu|we|th|fr|sa|su))?',
@@ -162,7 +192,6 @@ class NearbyPlaceController extends GetxController {
         final timeMatch = RegExp(
           r'(\d{2}):(\d{2})-(\d{2}):(\d{2})',
         ).firstMatch(part);
-
         if (dayMatch != null && timeMatch != null) {
           final startDay = weekdays[dayMatch.group(1)!]!;
           final endDay = dayMatch.group(2) != null
@@ -249,9 +278,8 @@ class NearbyPlaceController extends GetxController {
     if (permission == LocationPermission.denied)
       permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
+        permission == LocationPermission.deniedForever)
       throw Exception('Location permissions are denied.');
-    }
     return await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
@@ -275,7 +303,6 @@ class NearbyPlaceController extends GetxController {
   }
 
   void _showInfoSnackbar({required String title, required String message}) {
-    print(message);
     Get.snackbar(
       title,
       message,
