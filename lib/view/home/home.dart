@@ -1,4 +1,5 @@
 import 'package:findzy/view/home/widgets/home_dashboard.dart';
+import 'package:findzy/view/settings/settings.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -306,7 +307,7 @@ class Home extends StatelessWidget {
               const SizedBox.shrink(), // placeholder for first screen
               _routinesPage(),
               _explorePage(),
-              _settingsPage(),
+              Settings(),
             ],
           );
         }

@@ -11,6 +11,8 @@ const Color kAccentColor = Color(
 const Color kBgColor = Color(0xFF0E0E10); // Deep Charcoal Black - background
 const Color kTextColor = Color(0xFFF5F5F7); // Soft White - primary text
 const Color kCardColor = Color(0xFF1A1A1E); // Dark Greyish Blue - surface/card
+const Color kBgColor2 = Color(0xFF121212);
+const Color kCardColor2 = Color(0xFF1E1E1E); // Dark Greyish Blue - surface/card
 
 /// Optional Glow/Gradient helpers
 const Color kGlowPurple = Color(0xFF8E2DE2); // Gradient start (purple glow)
