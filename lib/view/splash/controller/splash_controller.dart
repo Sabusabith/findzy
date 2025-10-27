@@ -1,3 +1,4 @@
+import 'package:findzy/core/routes/app_pages.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -28,7 +29,7 @@ class SplashController extends GetxController
 
     // Navigate after 3 seconds
     Future.delayed(const Duration(seconds: 2), () {
-      Get.offAllNamed('/home');
+      Get.offAllNamed(Routes.ONBOARDING);
     });
   }
 

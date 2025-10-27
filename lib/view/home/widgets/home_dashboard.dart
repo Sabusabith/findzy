@@ -192,8 +192,14 @@ class HomeDashboard extends StatelessWidget {
         delegate: SliverChildBuilderDelegate((context, index) {
           final item = items[index];
           return GestureDetector(
-            onTap: () {
-              if (hcontroller.currentAddress.value == 'Locating...') {
+            onTap: () async {
+              bool hasPermission = await hcontroller.checkAndRequestLocation(
+                context,
+              );
+
+              if (!hasPermission) return;
+              if (hcontroller.currentAddress.value == 'Locating...' ||
+                  hcontroller.currentAddress.value == 'Updating...') {
                 Get.snackbar(
                   "Locating Address...",
                   "Please wait while we fetch your location.",

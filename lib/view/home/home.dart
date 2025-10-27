@@ -265,24 +265,64 @@ class Home extends StatelessWidget {
                               Transform(
                                 transform: Matrix4.translationValues(-3, 0, 0),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.location_on,
                                       color: Colors.white70,
                                       size: 14,
                                     ),
-                                    SizedBox(width: 3),
-                                    Obx(
-                                      () => Text(
-                                        controller.currentAddress.value,
-                                        style: GoogleFonts.nunito(
-                                          color: Colors.greenAccent,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(width: 3),
+                                    const SizedBox(width: 4),
+                                    Obx(() {
+                                      final address =
+                                          controller.currentAddress.value;
+                                      final isError =
+                                          address.contains("denied") ||
+                                          address.contains("unavailable") ||
+                                          address.contains("Error") ||
+                                          address.contains("fetch") ||
+                                          address.contains(
+                                            "Location unavailable",
+                                          ) ||
+                                          address.contains(
+                                            "Location permission denied",
+                                          ) ||
+                                          address.contains(
+                                            "Unable to fetch location",
+                                          ) ||
+                                          address.contains(
+                                            "Error fetching location",
+                                          );
+                                      ;
+
+                                      return Row(
+                                        children: [
+                                          Text(
+                                            address,
+                                            style: TextStyle(
+                                              color: isError
+                                                  ? Colors.redAccent
+                                                  : Colors.greenAccent,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          if (isError ||
+                                              address == "Locating..." ||
+                                              address == "Updating...")
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.refresh,
+                                                size: 14,
+                                                color: Colors.white54,
+                                              ),
+                                              onPressed:
+                                                  controller.refreshLocation,
+                                              tooltip: 'Refresh location',
+                                            ),
+                                        ],
+                                      );
+                                    }),
                                   ],
                                 ),
                               ),

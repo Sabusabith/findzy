@@ -8,66 +8,49 @@ class HomeController extends GetxController {
   var selectedIndex = 0.obs;
   var currentAddress = "Locating...".obs;
   var currentPosition = Rxn<Position>();
-  var maxDistance = 5.0.obs; // default 5 km
+  var maxDistance = 5.0.obs;
 
   @override
   void onInit() {
     super.onInit();
-    _determinePosition();
+    checkPermissionAndLocation();
   }
 
   void changeTab(int index) {
     selectedIndex.value = index;
   }
 
-  Future<void> _determinePosition() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      Get.snackbar(
-        "Location Disabled",
-        "Please enable GPS/location services.",
-        backgroundColor: Colors.redAccent,
-        colorText: Colors.white,
-      );
-      await Geolocator.openLocationSettings();
-      return;
-    }
-
+  /// Checks if location permission is available
+  Future<void> checkPermissionAndLocation() async {
     LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        Get.snackbar(
-          "Permission Denied",
-          "Location access is required.",
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-        );
-        return;
-      }
-    }
 
-    if (permission == LocationPermission.deniedForever) {
-      Get.snackbar(
-        "Permission Denied Permanently",
-        "Enable location permission from settings.",
-        backgroundColor: Colors.redAccent,
-        colorText: Colors.white,
-      );
-      await Geolocator.openAppSettings();
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      Future.delayed(const Duration(milliseconds: 800), () {
+        _showPermissionDialog();
+      });
+      currentAddress.value = "Location permission denied";
       return;
     }
 
-    // Permission granted → get position
-    currentPosition.value = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
+    _determinePosition();
+  }
 
-    // Get human-readable address
-    _getAddressFromLatLng(
-      currentPosition.value!.latitude,
-      currentPosition.value!.longitude,
-    );
+  Future<void> _determinePosition() async {
+    try {
+      currentAddress.value = "Updating...";
+      currentPosition.value = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      _getAddressFromLatLng(
+        currentPosition.value!.latitude,
+        currentPosition.value!.longitude,
+      );
+    } catch (e) {
+      currentAddress.value = "Location unavailable";
+      print("Error getting position: $e");
+    }
   }
 
   Future<void> _getAddressFromLatLng(double lat, double lon) async {
@@ -81,20 +64,11 @@ class HomeController extends GetxController {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final fullAddress = data['display_name'] ?? "Unknown location";
+        final parts = fullAddress.split(',').map((e) => e.trim()).toList();
 
-        // Split safely and convert each part to String
-        final parts = <String>[];
-        for (var part in fullAddress.split(',')) {
-          parts.add(part.toString().trim());
-        }
-
-        if (parts.length >= 2) {
-          currentAddress.value = "${parts[0]}, ${parts[1]}";
-        } else if (parts.isNotEmpty) {
-          currentAddress.value = parts[0];
-        } else {
-          currentAddress.value = fullAddress;
-        }
+        currentAddress.value = parts.length >= 2
+            ? "${parts[0]}, ${parts[1]}"
+            : fullAddress;
       } else {
         currentAddress.value = "Unable to fetch location";
       }
@@ -102,5 +76,98 @@ class HomeController extends GetxController {
       currentAddress.value = "Error fetching location";
       print("Reverse geocoding error: $e");
     }
+  }
+
+  Future<bool> checkAndRequestLocation(BuildContext context) async {
+    bool isLocationEnabled = await Geolocator.isLocationServiceEnabled();
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (!isLocationEnabled) {
+      // 🔴 If location service is off
+      Get.dialog(
+        AlertDialog(
+          backgroundColor: const Color(0xFF1E1F2E),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            "Location Disabled",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            "Please enable location services to find nearby places.",
+            style: TextStyle(color: Colors.white70, fontSize: 14),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Get.back();
+                await Geolocator.openLocationSettings();
+              },
+              child: const Text(
+                "Open Settings",
+                style: TextStyle(color: Colors.greenAccent),
+              ),
+            ),
+          ],
+        ),
+      );
+      return false;
+    }
+
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      // 🔴 Permission denied
+      _showPermissionDialog();
+      return false;
+    }
+
+    // ✅ Everything OK
+    return true;
+  }
+
+  /// Shows dialog if permission denied
+  void _showPermissionDialog() {
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: const Color(0xFF1E1F2E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          "Location Access Needed",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          "To find nearby petrol pumps and hospitals, please enable location access from settings.",
+          style: TextStyle(color: Colors.white70, fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () async {
+              await Geolocator.openAppSettings();
+              Get.back();
+            },
+            child: const Text(
+              "Grant Permission",
+              style: TextStyle(color: Colors.greenAccent),
+            ),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  /// Manual refresh button handler
+  Future<void> refreshLocation() async {
+    currentAddress.value = "Updating...";
+    await checkPermissionAndLocation();
   }
 }

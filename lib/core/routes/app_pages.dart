@@ -1,5 +1,7 @@
 import 'package:findzy/view/home/bindings/home_bindigs.dart';
 import 'package:findzy/view/home/home.dart';
+import 'package:findzy/view/onboarding/bindings/onboarding_bindings.dart';
+import 'package:findzy/view/onboarding/views/onboarding.dart';
 import 'package:findzy/view/profile/bindings/profile_bindings.dart';
 import 'package:findzy/view/profile/profile.dart';
 import 'package:findzy/view/splash/bindings/splash_bindings.dart';
@@ -31,6 +33,13 @@ class AppPages {
       binding: ProfileBindings(),
       transition: Transition.downToUp, // smooth professional transition
       transitionDuration: const Duration(milliseconds: 200),
+    ),
+    GetPage(
+      name: Routes.ONBOARDING,
+      page: () => OnboardingScreen(),
+      binding: OnboardingBindings(),
+      transition: Transition.cupertino, // smooth professional transition
+      transitionDuration: const Duration(milliseconds: 400),
     ),
   ];
 }
