@@ -1,3 +1,5 @@
+import 'package:findzy/view/search/controller/search_controller.dart'
+    show SearchControllerX;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
@@ -14,10 +16,18 @@ class HomeController extends GetxController {
   void onInit() {
     super.onInit();
     checkPermissionAndLocation();
+    Get.lazyPut<SearchControllerX>(() => SearchControllerX(), fenix: true);
   }
 
   void changeTab(int index) {
     selectedIndex.value = index;
+    if (index != 1) {
+      final SearchControllerX searchController = Get.find();
+      searchController.query.value = '';
+      searchController.results.clear();
+      // optionally: reset debounce
+      searchController.debounce?.cancel();
+    }
   }
 
   /// Checks if location permission is available

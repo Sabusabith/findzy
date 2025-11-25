@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:findzy/view/home/widgets/webview.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class NearbyPlaceController extends GetxController {
   final String placeType;
@@ -27,6 +29,36 @@ class NearbyPlaceController extends GetxController {
   void onInit() {
     super.onInit();
     fetchNearbyPlaces();
+  }
+
+  void savePlaceToHistory(Map<String, dynamic> place) {
+    final Box historyBox = Hive.box('search_history');
+
+    final newItem = {
+      "display_name": place['name'],
+      "lat": place['lat'],
+      "lon": place['lon'],
+      "address": place['address'],
+    };
+
+    // Load existing history
+    List<Map<String, dynamic>> history = List<Map<String, dynamic>>.from(
+      historyBox.get('items', defaultValue: <Map<String, dynamic>>[]),
+    );
+
+    // Remove duplicate if exists
+    history.removeWhere((e) => e['display_name'] == newItem['display_name']);
+
+    // Insert new at top
+    history.insert(0, newItem);
+
+    // Keep max 10 items
+    if (history.length > 10) history.removeLast();
+
+    // Save back to Hive
+    historyBox.put('items', history);
+
+    print("✅ Saved ${newItem['display_name']} to search history");
   }
 
   Future<void> fetchNearbyPlaces() async {
@@ -282,6 +314,25 @@ class NearbyPlaceController extends GetxController {
       throw Exception('Location permissions are denied.');
     return await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
+    );
+  }
+
+  void openWebSearch(
+    String name,
+    String address,
+    Color startColor,
+    Color endColor,
+  ) {
+    final query = Uri.encodeComponent("$name $address");
+    final url = "https://www.google.com/search?q=$query";
+
+    Get.to(
+      () => WebViewPage(
+        title: name,
+        url: url,
+        startColor: startColor,
+        endColor: endColor,
+      ),
     );
   }
 

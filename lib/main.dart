@@ -6,8 +6,10 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Hive.initFlutter();
   await Hive.openBox('placesCache');
+  await Hive.openBox('search_history');
   runApp(MyApp());
 }
 

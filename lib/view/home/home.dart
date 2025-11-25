@@ -1,4 +1,5 @@
 import 'package:findzy/view/home/widgets/home_dashboard.dart';
+import 'package:findzy/view/search/search_screen.dart';
 import 'package:findzy/view/settings/settings.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -345,7 +346,7 @@ class Home extends StatelessWidget {
             index: index,
             children: [
               const SizedBox.shrink(), // placeholder for first screen
-              _routinesPage(),
+              SearchScreen(),
               _explorePage(),
               Settings(),
             ],
@@ -363,14 +364,14 @@ class Home extends StatelessWidget {
           unselectedItemColor: Colors.white54,
           showUnselectedLabels: true,
           type: BottomNavigationBarType.fixed,
-          items: const [
+          items: [
             BottomNavigationBarItem(
               icon: Icon(CupertinoIcons.home),
               label: "Home",
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.timer_outlined),
-              label: "Routines",
+              icon: Icon(CupertinoIcons.search),
+              label: "Search",
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.explore_outlined),
@@ -380,84 +381,6 @@ class Home extends StatelessWidget {
               icon: Icon(Icons.settings_outlined),
               label: "Settings",
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 🔹 Helper Widgets for First Page
-  Widget _buildSceneCard(String title, Color color, IconData icon) {
-    return Container(
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: Colors.white, size: 26),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: GoogleFonts.nunito(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSceneImage(String title, String imagePath) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        image: DecorationImage(
-          image: AssetImage(imagePath),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            Colors.black.withOpacity(0.3),
-            BlendMode.darken,
-          ),
-        ),
-      ),
-      child: Center(
-        child: Text(
-          title,
-          style: GoogleFonts.nunito(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLightCard(String title, Color color) {
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.9),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        height: 120,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.lightbulb, color: Colors.white, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: GoogleFonts.nunito(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Switch(value: true, onChanged: (_) {}, activeColor: Colors.white),
           ],
         ),
       ),

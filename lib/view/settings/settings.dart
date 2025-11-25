@@ -1,5 +1,6 @@
 import 'package:findzy/core/constants/app_colors.dart';
 import 'package:findzy/core/routes/app_pages.dart';
+import 'package:findzy/view/settings/widgets/search_hiatory.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/get_navigation.dart';
@@ -77,22 +78,12 @@ class Settings extends StatelessWidget {
             const SizedBox(height: 15),
 
             _settingsTile(
-              icon: Icons.lightbulb_outline,
-              title: "Lights",
-              subtitle: "Manage your lights and plugs",
-              onTap: () {},
-            ),
-            _settingsTile(
-              icon: Icons.add_circle_outline,
-              title: "Add a Hue Bridge",
-              subtitle: "",
-              onTap: () {},
-            ),
-            _settingsTile(
-              icon: Icons.mic_none,
-              title: "Voice assistants",
-              subtitle: "",
-              onTap: () {},
+              icon: Icons.history,
+              title: "History",
+              subtitle: "Show Your History",
+              onTap: () {
+                Get.to(() => SearchHistoryPage());
+              },
             ),
 
             const SizedBox(height: 30),

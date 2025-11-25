@@ -199,33 +199,70 @@ class NearbyPlacePage extends StatelessWidget {
                                 ),
                               ),
 
-                              // Open/Closed status
-
-                              // Navigation button
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
+                              Row(
                                 children: [
-                                  IconButton(
-                                    icon: Icon(
-                                      CupertinoIcons.location,
-                                      color: startColor,
-                                      size: 28,
-                                    ),
-                                    onPressed: () {
-                                      controller.openInMaps(
-                                        place['lat'],
-                                        place['lon'],
-                                      );
-                                    },
+                                  // 🌍 Internet Search Button
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.language,
+                                          color: startColor,
+                                          size: 26,
+                                        ),
+                                        onPressed: () {
+                                          controller.savePlaceToHistory(place);
+
+                                          controller.openWebSearch(
+                                            place['name'],
+                                            place['address'],
+                                            startColor,
+                                            endColor,
+                                          );
+                                        },
+                                      ),
+                                      Text(
+                                        "Search",
+                                        style: GoogleFonts.nunito(
+                                          color: Colors.grey.shade500,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  Text(
-                                    "Locate Me",
-                                    style: GoogleFonts.nunito(
-                                      color: Colors.grey.shade500,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+
+                                  const SizedBox(width: 12),
+
+                                  // 📍 Locate Me Button
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      IconButton(
+                                        icon: Icon(
+                                          CupertinoIcons.location,
+                                          color: startColor,
+                                          size: 26,
+                                        ),
+                                        onPressed: () {
+                                          controller.savePlaceToHistory(place);
+
+                                          controller.openInMaps(
+                                            place['lat'],
+                                            place['lon'],
+                                          );
+                                        },
+                                      ),
+                                      Text(
+                                        "Locate Me",
+                                        style: GoogleFonts.nunito(
+                                          color: Colors.grey.shade500,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
